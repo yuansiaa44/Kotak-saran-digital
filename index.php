@@ -20,7 +20,7 @@ class All {
     }
 
    public function tampilan(){
-    $take = "SELECT saran.id_nama, saran.pengisi, saran.katagori, saran.isi_saran
+    $take = "SELECT saran.id_nama, saran.pengisi, saran.katagori, saran.isi_saran, saran.tanggapan
     FROM saran
     JOIN user ON saran.id_user = user.id_user
     ORDER BY saran.id_user DESC";
@@ -85,7 +85,7 @@ class All {
         }
 
         /* Sidebar Styles */
-                .sidebar {
+        .sidebar {
             width: var(--sidebar-width);
             background: var(--primary-color);
             padding: 20px;
@@ -220,6 +220,43 @@ class All {
             text-align: center;
         }
 
+        /* Popup Styles */
+        input[type="checkbox"] {
+            display: none;
+        }
+
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 320px;
+            padding: 20px;
+            background: white;
+            border: 2px solid #444;
+            transform: translate(-50%, -50%);
+            z-index: 999;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            border-radius: 8px;
+        }
+
+        .popup h3 {
+            margin-top: 0;
+            color: var(--secondary-color);
+        }
+
+        .close-btn {
+            float: right;
+            font-size: 20px;
+            cursor: pointer;
+            color: #f00;
+        }
+
+        /* Show popup when checkbox is checked */
+        .popup-toggle:checked + .table-row + .popup {
+            display: block;
+        }
+
         /* Mobile Menu Toggle */
         .menu-toggle {
             display: none;
@@ -235,20 +272,32 @@ class All {
             border-radius: 5px;
             cursor: pointer;
         }
+        
         .btn {
-        background-color: orange;
-        color: white;
-        padding: 6px 12px;
-        border-radius: 12px;
-        border: none;
-        margin-right: 6px;
-        font-size: 14px;
-        text-decoration:none ;
+            background-color: orange;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 12px;
+            border: none;
+            margin-right: 6px;
+            font-size: 14px;
+            text-decoration:none;
+            cursor: pointer;
         }
 
         .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Row hover effect */
+        .clickable-row {
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .clickable-row:hover {
+            background-color: #f0f0f0;
         }
 
         /* Responsive Styles */
@@ -305,11 +354,12 @@ class All {
             .header-item {
                 font-size: 14px;
             }
+            
+            .popup {
+                width: 280px;
+            }
         }
         
-        
-
-
         @media (max-width: 576px) {
             .logo {
                 margin-bottom: 30px;
@@ -353,6 +403,11 @@ class All {
             .row-item {
                 font-size: 12px;
             }
+            
+            .popup {
+                width: 250px;
+                padding: 15px;
+            }
         }
     </style>
 </head>
@@ -376,7 +431,6 @@ class All {
             <a href="index.php" class="nav-item">Home</a>
            <a href="form.php" class="nav-item">Form Saran</a>
             <a href="logout.php" class="nav-item about-link">Logout</a>
-
         </nav>
     </aside>
 
@@ -399,27 +453,42 @@ class All {
                 <div class="header-item">Kategori</div>
                 <div class="header-item">Saran</div>
                 <div class="header-item">Aksi</div>
-
             </div>
             
             <!-- Table Rows -->
             <?php 
             $no = 1;
-            foreach($list as $row): ?>
-            <div class="table-row">
-                <div class="row-item"><?php echo $no++; ?></div>
-                <div class="row-item"><?php echo htmlspecialchars($row['pengisi']); ?></div>
-                <div class="row-item"><?php echo htmlspecialchars($row['katagori']); ?></div>
-                <div class="row-item"><?php echo htmlspecialchars($row['isi_saran']); ?></div>
-                <div class="row-item">
-          
-                     <a href="delete.php?id_nama=<?php echo $row['id_nama'];?>" class="btn">Delete</a>
-                     <a href="tanggapan.php?id_nama=<?php echo $row['id_nama'];?>" class="btn">Tanggapi</a>
-                     
-
-            </div>
+            foreach($list as $row): 
+                $popupId = 'popup-' . $row['id_nama'];
+                $checkboxId = 'toggle-' . $row['id_nama'];
+            ?>
+                <!-- Checkbox trigger (harus tepat sebelum row) -->
+                <input type="checkbox" id="<?php echo $checkboxId; ?>" class="popup-toggle">
+                
+                <!-- Table row -->
+                <div class="table-row clickable-row">
+                    <label for="<?php echo $checkboxId; ?>" class="row-item"><?php echo $no++; ?></label>
+                    <label for="<?php echo $checkboxId; ?>" class="row-item"><?php echo htmlspecialchars($row['pengisi']); ?></label>
+                    <label for="<?php echo $checkboxId; ?>" class="row-item"><?php echo htmlspecialchars($row['katagori']); ?></label>
+                    <label for="<?php echo $checkboxId; ?>" class="row-item"><?php echo htmlspecialchars($row['isi_saran']); ?></label>
+                    <div class="row-item">
+                        <a href="delete.php?id_nama=<?php echo $row['id_nama'];?>" class="btn">Delete</a>
+                        <a href="tanggapan.php?id_nama=<?php echo $row['id_nama'];?>" class="btn">Tanggapi</a>
+                    </div>
+                </div>
+                
+                <!-- Popup (harus tepat setelah row) -->
+                <div class="popup" id="<?php echo $popupId; ?>">
+                    <label for="<?php echo $checkboxId; ?>" class="close-btn">&times;</label>
+                    <?php if (!empty($row['tanggapan'])): ?>
+                        <h3>Tanggapan</h3>
+                        <p><?php echo htmlspecialchars($row['tanggapan']); ?></p>
+                    <?php else: ?>
+                        <p>Belum ada tanggapan</p>
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
         </div>
-        <?php endforeach; ?>
     </main>
 
     <script>
