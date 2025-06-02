@@ -37,7 +37,8 @@ class User extends Database {
             }
             
             // Gunakan prepared statement untuk mencegah SQL injection
-            $stmt = $conn->prepare("SELECT id_user, password FROM user WHERE nama_user = ?");
+            $stmt = $conn->prepare("SELECT id_user, password, role FROM user WHERE nama_user = ?");
+
             if (!$stmt) {
                 error_log("Persiapan statement gagal: " . $conn->error);
                 return false;
@@ -59,9 +60,11 @@ class User extends Database {
                     $_SESSION['id_user'] = $row['id_user'];
                     $_SESSION['user_ip'] = $_SERVER['REMOTE_ADDR'];
                     $_SESSION['user_agent'] = $_SERVER['HTTP_USER_AGENT'];
+                    $_SESSION['role'] = $row['role']; // ⬅️ simpan role ke session
                     error_log("Verifikasi password berhasil");
                     return true;
                 }
+
                 error_log("Verifikasi password gagal");
             } else {
                 error_log("User tidak ditemukan atau ada duplikat");
