@@ -1,5 +1,10 @@
 <?php 
 require_once 'config2.php';
+session_start();
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    header("Location: index.php");
+    exit();
+}
 class Respons extends Database {
     protected $conn;
     private $id_user;
